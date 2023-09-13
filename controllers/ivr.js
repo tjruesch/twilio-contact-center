@@ -1,4 +1,5 @@
 const twilio 	= require('twilio')
+const http = require('http')
 
 const taskrouterHelper = require('./helpers/taskrouter-helper.js')
 
@@ -17,7 +18,7 @@ module.exports.welcome = function (req, res) {
 		action: 'select-team',
 		method: 'GET',
 		numDigits: 1,
-		timeout: 4,
+		timeout: 2,
 		language: 'en-US',
 		hints: keywords.join()
 	})
@@ -25,6 +26,26 @@ module.exports.welcome = function (req, res) {
 	gather.say(req.configuration.ivr.text)
 
 	twiml.say('You did not say anything or enter any digits.')
+	twiml.pause({length: 2})
+	twiml.redirect({method: 'GET'}, 'welcome')
+
+	res.send(twiml.toString())
+}
+
+module.exports.welcomeAlt = function (req, res) {
+	const twiml =  new twilio.twiml.VoiceResponse()
+
+	const gather = twiml.gather({
+		input: 'dtmf speech',
+		action: 'translate-text',
+		method: 'GET',
+		numDigits: 1,
+		timeout: 4,
+		language: 'en-US'
+	})
+
+	gather.say(req.configuration.ivr.text)
+
 	twiml.pause({length: 2})
 	twiml.redirect({method: 'GET'}, 'welcome')
 
@@ -83,7 +104,7 @@ module.exports.selectTeam = function (req, res) {
 			timeout: 5
 		})
 
-		gather.say('Press a key if you want a callback from ' + team.friendlyName + ', or stay on the line')
+		gather.say('Press a key if you want a callback from a ' + team.friendlyName + ' interpreter, or stay on the line')
 
 		/* create task attributes */
 		const attributes = {
@@ -104,13 +125,88 @@ module.exports.selectTeam = function (req, res) {
 	res.send(twiml.toString())
 }
 
+module.exports.translateText = function (req, res) {
+	/* check if we got a dtmf input or a speech-to-text */
+
+	const twiml =  new twilio.twiml.VoiceResponse()
+
+	let translation = 'Das ist der originale Wert'
+	if (req.query.SpeechResult) {
+		console.log('SpeechResult: ' + req.query.SpeechResult)
+
+		const postData = JSON.stringify({
+			text: req.query.SpeechResult,
+			source_lang: 'en-us',
+			target_lang: 'de',
+			engine: 'deepl'
+		})
+
+		const translation_request = http.request({
+			hostname: 'localhost',
+			port: 8000,
+			path: '/api/v1/translate/text',
+			method: 'POST',
+			headers: {'Content-Type': 'application/json'},
+		}, (result) => {
+			console.log(`STATUS: ${result.statusCode}`);
+			result.setEncoding('utf8')
+
+			result.on('data', (resp) => {
+				console.log(`Body: ${resp}`)
+				translation = JSON.parse(resp)['translation']
+				console.log('in data: ', translation)
+			})
+
+			result.on('end', () => {
+				console.log('done.')
+
+				twiml.say({
+					language: 'de-DE',
+					voice: 'Polly.Hans'
+				}, translation)
+
+				twiml.redirect({ method: 'GET' }, 'wait-for-new-text')
+				res.send(twiml.toString())
+			})
+		})
+
+		translation_request.on('error', (e) => {
+			console.error('ERROR:', e.message)
+		})
+
+		translation_request.write(postData)
+		translation_request.end()
+
+	} else {
+		twiml.redirect({ method: 'GET' }, 'welcome')
+	}
+}
+
+module.exports.waitForNewText = function (req, res) {
+	const twiml =  new twilio.twiml.VoiceResponse()
+
+	twiml.gather({
+		input: 'dtmf speech',
+		action: 'translate-text',
+		method: 'GET',
+		numDigits: 1,
+		timeout: 4,
+		language: 'en-US'
+	})
+
+	twiml.pause({length: 2})
+	twiml.redirect({method: 'GET'}, 'welcome')
+
+	res.send(twiml.toString())
+}
+
 module.exports.createTask = async (req, res) => {
 	/* create task attributes */
 	const attributes = {
 		title: 'Callback request',
 		text: 'Caller answered IVR with option "' + req.query.teamFriendlyName + '"',
 		channel: 'callback',
-		name: req.query.From,	
+		name: req.query.From,
 		team: req.query.teamId,
 		phone: req.query.From
 	}
@@ -118,16 +214,16 @@ module.exports.createTask = async (req, res) => {
 	const twiml =  new twilio.twiml.VoiceResponse()
 
 	try {
-    await taskrouterHelper.createTask(attributes);
+		await taskrouterHelper.createTask(attributes);
 
-    twiml.say('Thanks for your callback request, an agent will call you back soon.')
+		twiml.say('Thanks for your callback request, an agent will call you back soon.')
 		twiml.hangup()
 
-    res.status(200).send(twiml.toString());
-  } catch (error) {
-		
+		res.status(200).send(twiml.toString());
+	} catch (error) {
+
 		twiml.say('An application error occured, the demo ends now')
 		res.status(200).send(twiml.toString());
-  }
+	}
 
 }

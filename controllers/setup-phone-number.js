@@ -6,21 +6,21 @@ const client = twilio(process.env.TWILIO_API_KEY_SID, process.env.TWILIO_API_KEY
 
 module.exports.update = function (req, res) {
 	console.log('configure number: ' + req.body.sid)
-	const voiceUrl 	=  req.protocol + '://' + req.hostname + '/api/ivr/welcome'
+	const voiceUrl 	=  req.protocol + '://' + req.hostname + '/api/ivr/welcome-alt'
 	const smsUrl 		=  req.protocol + '://' + req.hostname + '/api/messaging-adapter/inbound'
 
 	client.incomingPhoneNumbers(req.body.sid).update({
 		voiceUrl: voiceUrl,
 		voiceMethod: 'GET',
 		smsUrl: smsUrl,
-		smsMethod: 'POST'
+		smsMethod: 'POST',
 	}).then(phoneNumber => {
 		res.status(200).end()
+		console.log('configured number.')
 	}).catch(error => {
 		console.log('Setup Failure: Error setting up URLs for voice and SMS channels.')
 		res.status(500).send(res.convertErrorToJSON(error))
 	})
-
 }
 
 module.exports.validate = function (req, res) {

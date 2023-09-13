@@ -1,63 +1,73 @@
 {
-	"ivr": {
-		"text": "Thanks for calling. You can press a key or say the department name. Press 1 for Sales, press 2 for Support",
-		"options": [
-			{
-				"friendlyName": "Sales",
-				"digit": 1,
-				"id": "sales"
-			},
-			{
-				"friendlyName": "Support",
-				"digit": 2,
-				"id": "support"
-			}
-		]
-	},
-	"queues": [
-		{
-			"friendlyName": "Chat Queue",
-			"filterFriendlyName": "Chat",
-			"id": "chat",
-			"taskQueueSid": null,
-			"expression": "channel == \"chat\"",
-			"targetWorkerExpression": ""
-		},
-		{
-			"friendlyName": "Phone Queue",
-			"filterFriendlyName": "Phone",
-			"id": "phone",
-			"taskQueueSid": null,
-			"expression": "channel == \"phone\"",
-			"targetWorkerExpression": "task.team == worker.team OR task.transferToWorkerSid = worker.sid"
-		},
-		{
-			"friendlyName": "Video Queue",
-			"filterFriendlyName": "Video",
-			"id": "video",
-			"taskQueueSid": null,
-			"expression": "channel == \"video\"",
-			"targetWorkerExpression": ""
-		},
-		{
-			"friendlyName": "Callback Queue",
-			"filterFriendlyName": "Callback",
-			"id": "callback",
-			"taskQueueSid": null,
-			"expression": "channel == \"callback\"",
-			"targetWorkerExpression": ""
-		}
-	],
-	"twilio": {
-		"workerOfflineActivitySid": null,
-		"workerAvailableActivitySid": null,
-		"workerUnavailableActivitySid": null,
-		"callerId": null,
-		"applicationSid": null,
-		"workflowSid": null,
-		"facebookPageId": null,
-		"voice": {
-			"recording": false
-		}
-	}
+    "ivr": {
+        "text": "Thanks for calling. Please note that the quality of the translation for this demo is currently limited by Twilio's Speech-to-Text capabilities. Please say something and I will translate your text to German",
+        "options": [
+            {
+                "friendlyName": "French",
+                "digit": 1,
+                "id": "french"
+            },
+            {
+                "friendlyName": "Dutch",
+                "digit": 2,
+                "id": "dutch"
+            },
+            {
+                "friendlyName": "Callcenter",
+                "digit": 3,
+                "id": "callcenter"
+            },
+            {
+                "friendlyName": "AI",
+                "digit": 9,
+                "id": "ai"
+            }
+        ]
+    },
+    "queues": [
+        {
+            "friendlyName": "Chat Queue",
+            "filterFriendlyName": "Chat",
+            "id": "chat",
+            "taskQueueSid": "WQ7bcfd53754dcdb6660b59349c8ced32c",
+            "expression": "channel == \"chat\"",
+            "targetWorkerExpression": ""
+        },
+        {
+            "friendlyName": "Phone Queue",
+            "filterFriendlyName": "Phone",
+            "id": "phone",
+            "taskQueueSid": "WQ2a8097f49f420220213b7deecf365411",
+            "expression": "channel == \"phone\"",
+            "targetWorkerExpression": "task.team == worker.team"
+        },
+        {
+            "friendlyName": "Video Queue",
+            "filterFriendlyName": "Video",
+            "id": "video",
+            "taskQueueSid": "WQ525d6acfb2fc3f202df7ce45a9c35ddd",
+            "expression": "channel == \"video\"",
+            "targetWorkerExpression": "task.team == worker.team"
+        },
+        {
+            "friendlyName": "Callback Queue",
+            "filterFriendlyName": "Callback",
+            "id": "callback",
+            "taskQueueSid": "WQ70388246a9254ba74e655805769ac2ad",
+            "expression": "channel == \"callback\"",
+            "targetWorkerExpression": ""
+        }
+    ],
+    "twilio": {
+        "workerOfflineActivitySid": "WA939950ba85a69ad5033e3162642e8367",
+        "workerAvailableActivitySid": "WA8c0bfa41a26b22e073eec63df8d31334",
+        "workerUnavailableActivitySid": "WAdcf01b13da118a5ac84df701a24c40fd",
+        "callerId": "+14103059869",
+        "applicationSid": "AP9b2d172b94c7effe9e38a9f2431dd0ca",
+        "workflowSid": "WW398c3241422c7805bcb6df8172001d5c",
+        "facebookPageId": null,
+        "voice": {
+            "recording": false
+        }
+    }
 }

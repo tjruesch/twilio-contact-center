@@ -1,4 +1,14 @@
 'use-strict'
+require('dotenv').config()
+
+const ngrok = require('ngrok')
+const ngrokUrl = async function () {
+	const url = await ngrok.connect({
+		addr: (process.env.PORT || 5000),
+		authtoken: '2CM2u9oICkizv3Gog6zeeNaoeci_5wmnQWTW4fUhuQyiezcwo'
+	})
+	console.log('ngrok url ->', url)
+}
 
 var express       = require('express')
 var bodyParser    = require('body-parser')
@@ -157,6 +167,9 @@ var ivr = require('./controllers/ivr.js')
 router.route('/ivr/welcome').get(ivr.welcome)
 router.route('/ivr/select-team').get(ivr.selectTeam)
 router.route('/ivr/create-task').get(ivr.createTask)
+router.route('/ivr/translate-text').get(ivr.translateText)
+router.route('/ivr/welcome-alt').get(ivr.welcomeAlt)
+router.route('/ivr/wait-for-new-text').get(ivr.waitForNewText)
 
 /* routes called by the Twilio TaskRouter */
 var taskrouter = require('./controllers/taskrouter.js')
@@ -180,5 +193,5 @@ app.use('/api', router)
 app.use('/', express.static(__dirname + '/public'))
 
 app.listen(app.get('port'), function () {
-	console.log('magic happens on port', app.get('port'))
+	console.log('magic happens on port', app.get(ngrokUrl()))
 })

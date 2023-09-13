@@ -6,10 +6,12 @@ const client = twilio(process.env.TWILIO_API_KEY_SID, process.env.TWILIO_API_KEY
 });
 
 module.exports.get = (req, res) => {
+	console.log('check get')
 	res.status(200).json(req.configuration);
 };
 
 module.exports.update = async (req, res) => {
+	console.log('check update')
 	let configuration = req.body.configuration;
 
 	try {
@@ -18,6 +20,7 @@ module.exports.update = async (req, res) => {
 		configuration.twilio.applicationSid = applicationSid;
 
 		await updateChatService(req);
+		console.log('skipped updateChatService')
 		await syncQueues(configuration);
 
 		const { sid: workflowSid } = await createOrUpdateWorkflow(
@@ -42,6 +45,7 @@ module.exports.update = async (req, res) => {
 };
 
 const syncQueues = async (configuration) => {
+	console.log('check sync queues')
 	return Promise.all(
 		configuration.queues.map(async (queue) => {
 			let payload = {
@@ -57,6 +61,7 @@ const syncQueues = async (configuration) => {
 };
 
 const createOrUpdateQueue = async (queue) => {
+	console.log('check createorupdatequeue')
 	if (queue.sid) {
 		return client.taskrouter.workspaces(process.env.TWILIO_WORKSPACE_SID).taskQueues(queue.sid).update(queue);
 	} else {
@@ -65,6 +70,7 @@ const createOrUpdateQueue = async (queue) => {
 };
 
 const createOrUpdateWorkflow = async (sid, queues) => {
+	console.log('check couworkflow')
 	let workflow = { task_routing: { filters: [] } };
 
 	for (let i = 0; i < queues.length; i++) {
@@ -76,11 +82,28 @@ const createOrUpdateWorkflow = async (sid, queues) => {
 			target.expression = queues[i].targetWorkerExpression;
 		}
 
-		let item = {
-			targets: [ target ],
-			expression: queues[i].expression,
-			filterFriendlyName: queues[i].filterFriendlyName
-		};
+		let item
+		if (queues[i].id === 'phone') {
+			target.timeout = 10
+			target.taskReservationTimeout = 10
+
+			const target2 = {
+				espression: 'wroker.team == "callcenter"'
+			}
+
+			item = {
+				targets: [target, target2],
+				expression: queues[i].expression,
+				filterFriendlyName: queues[i].filterFriendlyName
+			}
+		} else {
+			item = {
+				targets: [ target ],
+				expression: queues[i].expression,
+				filterFriendlyName: queues[i].filterFriendlyName
+			};
+
+		}
 
 		workflow.task_routing.filters.push(item);
 	}
@@ -100,6 +123,7 @@ const createOrUpdateWorkflow = async (sid, queues) => {
 };
 
 const createOrUpdateApplication = async (sid, req) => {
+	console.log('check couApplication')
 	const payload = {
 		friendlyName: 'Twilio Contact Center Demo',
 		voiceUrl: `${req.protocol}://${req.hostname}/api/phone/call`,
@@ -114,11 +138,13 @@ const createOrUpdateApplication = async (sid, req) => {
 };
 
 const updateChatService = async (req) => {
+	console.log('check updateChatService')
 	let webhooks = {};
 
 	webhooks.postWebhookUrl = `${req.protocol}://${req.hostname}/api/messaging-adapter/outbound`;
 	webhooks.webhookFilters = 'onMessageSent';
 	webhooks.webhookMethod = 'POST';
+	webhooks.friendlyName = 'Test Chat Service'
 
 	return client.chat.services(process.env.TWILIO_CHAT_SERVICE_SID).update(webhooks);
 };
